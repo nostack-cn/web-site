@@ -11,28 +11,28 @@ const inter = Inter({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nostack.cloud'
 const siteName = '无栈云引'
 const siteDescription =
-  '无栈云引 — 一站式云计算服务平台，提供云服务器、云数据库、CDN加速、对象存储、Serverless函数计算、容器服务等核心产品。弹性伸缩，按需付费，助力企业高效上云。'
+  '云哨 — 域名 SSL 监控管家，提供域名到期检查、SSL 证书有效性监控、站点健康巡检、多通道告警通知等功能。全天候自动监控，异常秒级告警，助力企业域名安全。'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} — 一站式云计算服务平台`,
+    default: `${siteName} — 域名 SSL 监控管家`,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
   keywords: [
-    '云计算',
-    '云服务器',
-    '云数据库',
-    'CDN加速',
-    '对象存储',
-    'Serverless',
-    '容器服务',
+    '云哨',
+    '域名监控',
+    'SSL证书监控',
+    '域名到期提醒',
+    'SSL证书有效性检查',
+    '域名管家',
+    '网站监控',
+    '证书过期提醒',
     '无栈云引',
     'nostack',
-    '云平台',
-    'SaaS',
-    '弹性计算',
+    '域名安全',
+    '运维监控',
   ],
   authors: [{ name: '无栈云引' }],
   creator: '无栈云引',
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     locale: 'zh_CN',
     url: siteUrl,
     siteName: siteName,
-    title: `${siteName} — 一站式云计算服务平台`,
+    title: `${siteName} — 域名 SSL 监控管家`,
     description: siteDescription,
     images: [
       {
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteName} — 一站式云计算服务平台`,
+    title: `${siteName} — 域名 SSL 监控管家`,
     description: siteDescription,
     images: ['/og-image.png'],
   },
@@ -109,6 +109,7 @@ export default function RootLayout({
               name: '无栈云引',
               url: siteUrl,
               description: siteDescription,
+              knowsAbout: ['域名监控', 'SSL证书监控', '网站可用性监控', '域名到期检查'],
               sameAs: [],
             }),
           }}

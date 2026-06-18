@@ -12,16 +12,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${siteUrl}/products`,
+      url: `${siteUrl}/products/cloud-sentinel`,
       lastModified,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
-      url: `${siteUrl}/pricing`,
+      url: `${siteUrl}/blog`,
       lastModified,
-      changeFrequency: 'monthly',
-      priority: 0.9,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/docs`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     },
     {
       url: `${siteUrl}/about`,
@@ -30,10 +36,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
-      url: `${siteUrl}/docs`,
+      url: `${siteUrl}/auth`,
       lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.7,
+      changeFrequency: 'yearly',
+      priority: 0.4,
     },
   ]
 }
