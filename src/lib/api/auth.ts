@@ -2,7 +2,7 @@
  * 认证相关 API
  */
 
-import { post, type ApiResponse } from './client'
+import { get, post, type ApiResponse } from './client'
 
 // ====== 类型定义 ======
 
@@ -48,6 +48,40 @@ export interface RefreshResponse {
   refresh_token: string
 }
 
+// ====== 微信登录类型 ======
+
+export interface WxLoginQrResponse {
+  app_id: string
+  redirect_uri: string
+  scope: string
+  state: string
+}
+
+export interface WechatUser {
+  id: number
+  user_id: number
+  open_id: string
+  union_id: string
+  nickname: string
+  avatar: string
+  sex: number
+  created_at: string
+}
+
+export interface WxLoginResponse {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+  token_type: string
+  user: User
+  wx_user: WechatUser
+  is_new: boolean
+}
+
+export interface WxBindRequest {
+  code: string
+}
+
 // ====== API 函数 ======
 
 /** 邮箱密码登录 */
@@ -82,4 +116,26 @@ export async function logout(): Promise<ApiResponse<null>> {
 /** 发送短信验证码 */
 export async function sendSmsCode(phone: string): Promise<ApiResponse<null>> {
   return post<null>('/api/v1/sms/send', { phone })
+}
+
+// ====== 微信登录 API ======
+
+/** 获取微信扫码登录参数 */
+export async function getWxLoginQr(): Promise<ApiResponse<WxLoginQrResponse>> {
+  return get<WxLoginQrResponse>('/api/v1/wx/login/qr')
+}
+
+/** 绑定微信（需登录） */
+export async function bindWechat(code: string): Promise<ApiResponse<WechatUser>> {
+  return post<WechatUser>('/api/v1/wx/bind', { code })
+}
+
+/** 解绑微信（需登录） */
+export async function unbindWechat(): Promise<ApiResponse<null>> {
+  return post<null>('/api/v1/wx/unbind')
+}
+
+/** 获取微信绑定信息（需登录） */
+export async function getWxInfo(): Promise<ApiResponse<WechatUser | null>> {
+  return get<WechatUser | null>('/api/v1/wx/info')
 }

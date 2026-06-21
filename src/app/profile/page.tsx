@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { updateProfile, changePassword } from '@/lib/api/user'
+import { bindWechat, unbindWechat, getWxLoginQr } from '@/lib/api/auth'
 import { AuthGuard } from '@/components/AuthGuard'
 
 function ProfileContent() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, wxUser, refreshWxInfo } = useAuth()
   const [editMode, setEditMode] = useState(false)
   const [pwMode, setPwMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [wxLoading, setWxLoading] = useState(false)
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -283,6 +285,119 @@ function ProfileContent() {
             </div>
           </dl>
         )}
+      </div>
+
+      {/* 微信绑定 */}
+      <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-ink-900">第三方账号</h2>
+        <dl className="mt-4 space-y-3">
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#07C160]/10">
+                <svg className="h-5 w-5 text-[#07C160]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.962 1.625-6.852C11.458 7.8 13.67 6.857 15.997 6.857c.157 0 .314.004.47.019C15.118 4.094 12.182 2.188 8.691 2.188zm-2.87 4.178a.867.867 0 1 1 0 1.734.867.867 0 0 1 0-1.734zm5.743 0a.867.867 0 1 1 0 1.734.867.867 0 0 1 0-1.734z" />
+                </svg>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-ink-900">微信</dt>
+                {wxUser ? (
+                  <dd className="text-xs text-ink-500">已绑定 {wxUser.nickname || '微信用户'}</dd>
+                ) : (
+                  <dd className="text-xs text-ink-400">未绑定</dd>
+                )}
+              </div>
+            </div>
+            <div>
+              {wxUser ? (
+                <button
+                  onClick={async () => {
+                    if (!confirm('确定要解绑微信吗？解绑后将无法使用微信登录。')) return
+                    setWxLoading(true)
+                    setError('')
+                    try {
+                      const res = await unbindWechat()
+                      if (res.code !== 0) {
+                        setError(res.message || '解绑失败')
+                        return
+                      }
+                      await refreshWxInfo()
+                      setSuccess('微信已解绑')
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : '解绑失败')
+                    } finally {
+                      setWxLoading(false)
+                    }
+                  }}
+                  disabled={wxLoading}
+                  className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                >
+                  解绑
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    setWxLoading(true)
+                    setError('')
+                    try {
+                      const qrRes = await getWxLoginQr()
+                      if (qrRes.code !== 0 || !qrRes.data) {
+                        setError(qrRes.message || '获取微信登录参数失败')
+                        return
+                      }
+
+                      const { app_id, redirect_uri, scope, state } = qrRes.data
+                      const wxAuthUrl =
+                        `https://open.weixin.qq.com/connect/qrconnect` +
+                        `?appid=${encodeURIComponent(app_id)}` +
+                        `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
+                        `&response_type=code` +
+                        `&scope=${encodeURIComponent(scope)}` +
+                        `&state=${encodeURIComponent(state)}` +
+                        `#wechat_redirect`
+
+                      const w = 600
+                      const h = 700
+                      const popup = window.open(
+                        wxAuthUrl,
+                        'wx_bind',
+                        `width=${w},height=${h},left=${(window.screen.width - w) / 2},top=${(window.screen.height - h) / 2},toolbar=no,menubar=no,resizable=yes`,
+                      )
+
+                      if (!popup) {
+                        setError('弹窗被浏览器拦截，请允许弹窗后重试')
+                        return
+                      }
+
+                      const handleMessage = async (event: MessageEvent) => {
+                        if (!event.data || typeof event.data !== 'object') return
+                        const data = event.data as Record<string, unknown>
+                        if (data.type === 'wx_login_success') {
+                          window.removeEventListener('message', handleMessage)
+                          setSuccess('微信绑定成功')
+                          await refreshWxInfo()
+                          setWxLoading(false)
+                        } else if (data.type === 'wx_login_error') {
+                          window.removeEventListener('message', handleMessage)
+                          setError((data.error as string) || '微信绑定失败')
+                          setWxLoading(false)
+                        }
+                      }
+                      window.addEventListener('message', handleMessage)
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : '绑定失败')
+                    } finally {
+                      setWxLoading(false)
+                    }
+                  }}
+                  disabled={wxLoading}
+                  className="text-sm font-medium text-brand-cyan hover:text-brand-cyan-dark disabled:opacity-50"
+                >
+                  {wxLoading ? '处理中...' : '绑定'}
+                </button>
+              )}
+            </div>
+          </div>
+        </dl>
       </div>
     </div>
   )

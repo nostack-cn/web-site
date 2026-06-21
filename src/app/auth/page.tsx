@@ -10,7 +10,7 @@ type AuthMode = 'login' | 'register' | 'sms'
 function AuthForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { login, register, smsLogin, sendSmsCode } = useAuth()
+  const { login, register, smsLogin, sendSmsCode, wxLogin } = useAuth()
 
   const initialMode = (searchParams.get('mode') as AuthMode) || 'register'
   const plan = searchParams.get('plan') || ''
@@ -470,25 +470,28 @@ function AuthForm() {
             </div>
 
             {/* Social Login */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 rounded-lg border border-surface-300 bg-white px-4 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:border-brand-cyan hover:bg-surface-50"
+                onClick={async () => {
+                  setError('')
+                  setLoading(true)
+                  try {
+                    await wxLogin()
+                    router.push(redirect)
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : '微信登录失败')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#07C160]/30 bg-[#07C160]/5 px-4 py-2.5 text-sm font-medium text-[#07C160] transition-colors hover:border-[#07C160]/50 hover:bg-[#07C160]/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 5c-3.859 0-7 3.141-7 7s3.141 7 7 7 7-3.141 7-7-3.141-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z" />
-                  <path d="M12 9c-1.654 0-3 1.346-3 3s1.346 3 3 3 3-1.346 3-3-1.346-3-3-3z" />
-                </svg>
-                Google
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 rounded-lg border border-surface-300 bg-white px-4 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:border-brand-cyan hover:bg-surface-50"
-              >
-                <svg className="h-4 w-4 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.962 1.625-6.852C11.458 7.8 13.67 6.857 15.997 6.857c.157 0 .314.004.47.019C15.118 4.094 12.182 2.188 8.691 2.188zm-2.87 4.178a.867.867 0 1 1 0 1.734.867.867 0 0 1 0-1.734zm5.743 0a.867.867 0 1 1 0 1.734.867.867 0 0 1 0-1.734z" />
                 </svg>
-                微信
+                微信扫码登录
               </button>
             </div>
           </div>
